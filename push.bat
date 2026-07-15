@@ -1,23 +1,26 @@
 @echo off
 setlocal EnableDelayedExpansion
 
-REM Find the most recently modified folder
-for /f "delims=" %%d in ('dir /ad /b /o-d') do (
-    set "LATEST=%%d"
+REM Find the most recently modified .cpp file
+set "FILE="
+
+for /f "delims=" %%f in ('dir /b /a-d /o-d *.cpp') do (
+    set "FILE=%%~nf"
     goto :found
 )
 
 :found
-if not defined LATEST (
-    echo No problem folders found.
+
+if not defined FILE (
+    echo No .cpp files found.
     pause
     exit /b
 )
 
-echo Latest problem: !LATEST!
+echo Latest file: !FILE!
 
 git add .
-git commit -m "Solved !LATEST!"
+git commit -m "Solved !FILE!"
 git push origin main
 
 pause
