@@ -1,37 +1,58 @@
 @echo off
 setlocal EnableDelayedExpansion
 
-REM ----------------------------
+REM ==========================================
 REM Start Timer
-REM ----------------------------
-powershell -Command "$start = Get-Date"
+REM ==========================================
+for /f %%i in ('powershell -NoProfile -Command "[DateTime]::UtcNow.Ticks"') do set START=%%i
 
-REM Find the most recently modified folder
-for /f "delims=" %%d in ('dir /ad /b /o-d') do (
-    set "LATEST=%%d"
+REM ==========================================
+REM Find latest CPP file
+REM ==========================================
+set "FILE="
+
+for /f "delims=" %%f in ('dir /b /a-d /o-d *.cpp') do (
+    set "FILE=%%~nf"
     goto :found
 )
 
 :found
-if not defined LATEST (
-    echo No problem folders found.
+
+if not defined FILE (
+    echo No .cpp files found.
     pause
     exit /b
 )
 
-echo Latest problem: !LATEST!
+echo Latest Problem: !FILE!
 
 REM Current Date & Time
-for /f %%i in ('powershell -NoProfile -Command "Get-Date -Format \"yyyy-MM-dd HH:mm:ss\""') do set DATETIME=%%i
+for /f "delims=" %%i in ('powershell -NoProfile -Command "Get-Date -Format ''yyyy-MM-dd HH:mm:ss''"') do set DATETIME=%%i
 
 git add .
-git commit -m "Solved !LATEST! | %DATETIME%"
+
+git commit -m "Solved !FILE! | !DATETIME!"
+
+if errorlevel 1 (
+    echo Nothing to commit.
+    pause
+    exit /b
+)
+
 git push origin main
 
-REM ----------------------------
-REM End Timer
-REM ----------------------------
-powershell -NoProfile -Command ^
-"$elapsed=((Get-Date)-([datetime]'%DATE% %TIME%')).TotalMilliseconds; Write-Host ('Execution Time: {0:N0} ms' -f $elapsed)"
+REM ==========================================
+REM Stop Timer
+REM ==========================================
+for /f %%i in ('powershell -NoProfile -Command "[DateTime]::UtcNow.Ticks"') do set END=%%i
+
+for /f %%i in ('powershell -NoProfile -Command "([TimeSpan]::FromTicks(%END%-%START%)).TotalMilliseconds.ToString('F0')"') do set MS=%%i
+
+echo.
+echo ===================================
+echo Problem : !FILE!
+echo Date    : !DATETIME!
+echo Time    : !MS! ms
+echo ===================================
 
 pause
