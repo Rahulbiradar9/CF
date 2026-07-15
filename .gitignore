@@ -1,0 +1,6 @@
+*.prob
+*.exe
+*.o
+*.out
+*.bin
+*.tcs
